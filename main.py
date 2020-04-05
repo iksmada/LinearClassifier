@@ -5,9 +5,10 @@ from sklearn.model_selection import GridSearchCV
 from LinearClassifier import LinearClassifier
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-def run_gridsearch_and_plot(param_grid: list):
+def run_gridsearch_and_plot(X, Y, param_grid: list):
     # Grid Search on gamma hyperparameter
     search = GridSearchCV(
         # default 4 folds, 3 train 1 test
@@ -23,7 +24,7 @@ def run_gridsearch_and_plot(param_grid: list):
         #  -1 means using all processors
         n_jobs=-1,
         verbose=1
-    ).fit(X, Y.argmax(axis=1))
+    ).fit(X, Y)
 
     # Print results
     fig, ax1 = plt.subplots()
@@ -82,16 +83,29 @@ if __name__ == '__main__':
     # training set, divide data (X) and solution (Y)
     X = data['X']
     Y = data['S']
+    Y_train = Y.argmax(axis=1)
 
     # test set, divide data (X) and solution (Y)
     Xt = test['Xt']
     Yt = test['St']
+    Y_test = Yt.argmax(axis=1)
 
-    best_acc_gamma, best_mse_gamma = run_gridsearch_and_plot(list(2 ** x for x in range(-10, 12, 10)))
-    # ordena os dois bests, adiciona um pra cada lado, e faz grid search
-    #best_acc_gamma, best_mse_gamma = run_gridsearch_and_plot(list(2 ** x for x in range(, 12, 10)))
+    param_list = list(2 ** x for x in range(-10, 12))
+    best_param = run_gridsearch_and_plot(X, Y_train, param_list)
+    # check if [1] is bigger
+    if np.argmax(best_param) == 0:
+        best_param = (best_param[1], best_param[0])
+    # get the power
+    best_param = np.log2(best_param)
 
-    #y_pred = search.predict(Xt)
+    if best_param[0] == best_param[1]:
+        best_param[0] = best_param[0] - 1
+        best_param[1] = best_param[1] + 1
 
-    #print(classification_report(Yt.argmax(axis=1), y_pred,
-    #                            target_names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']))
+    param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
+    best_param = run_gridsearch_and_plot(X, Y_train, param_list)
+
+    y_pred = LinearClassifier(gamma=np.mean(best_param)).fit(X, Y_train).predict(Xt)
+
+    print(classification_report(Y_test, y_pred,
+                                target_names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']))
