@@ -4,6 +4,8 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
 from LinearClassifier import LinearClassifier
 
+import matplotlib.pyplot as plt
+
 if __name__ == '__main__':
     # loads MATLAB matrix
     data = scipy.io.loadmat('data.mat')
@@ -24,16 +26,23 @@ if __name__ == '__main__':
         # customized clissfier
         estimator=LinearClassifier(),
         # 2^-10 to 2^10
-        param_grid={'gamma': list(2 ** x for x in range(-10, 11, 2))},
+        param_grid={'gamma': list(2 ** x for x in range(-10, 12, 10))},
         # accuracy and mean square error scoring methods
         scoring=('accuracy', 'neg_mean_squared_error'),
         # to use best model returned, we need to set a tiebreaker criteria
         refit='neg_mean_squared_error',
         #  -1 means using all processors
-        n_jobs=-1
+        n_jobs=-1,
+        verbose=1
     ).fit(X, Y.argmax(axis=1))
 
     # Print results
+    fig, ax1 = plt.subplots()
+    plt.title('1st Step Grid search')
+    plt.xscale("log")
+    plt.grid()
+    gamma_params = list(param['gamma'] for param in search.cv_results_['params'])
+
     print("Best parameters set found on development set:")
     print()
     print(search.best_params_)
@@ -45,15 +54,33 @@ if __name__ == '__main__':
     for mean, std, params in zip(means_acc, stds_acc, search.cv_results_['params']):
         print("%0.3f (+/-%0.03f) for %r"
               % (mean, std * 2, params))
+
+    # add info to graph
+    color = 'tab:red'
+    ax1.set_xlabel('Coeficiente de Regularização')
+    ax1.set_ylabel('Acurácia', color=color)
+    ax1.plot(gamma_params, means_acc, color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+
     print()
     print("Grid mean squared error on development set:")
     print()
-    means_acc = search.cv_results_['mean_test_neg_mean_squared_error']
-    stds_acc = search.cv_results_['std_test_neg_mean_squared_error']
-    for mean, std, params in zip(means_acc, stds_acc, search.cv_results_['params']):
+    means_mse = search.cv_results_['mean_test_neg_mean_squared_error']
+    stds_mse = search.cv_results_['std_test_neg_mean_squared_error']
+    for mean, std, params in zip(means_mse, stds_mse, search.cv_results_['params']):
         print("%0.3f (+/-%0.03f) for %r"
               % (mean, std * 2, params))
     print()
+
+    # add more info to graph
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    color = 'tab:blue'
+    ax2.set_ylabel('Erro quadrático médio', color=color)  # we already handled the x-label with ax1
+    ax2.plot(gamma_params, means_mse, color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()
 
     y_pred = search.predict(Xt)
 
