@@ -17,21 +17,23 @@ if __name__ == '__main__':
     Xt = test['Xt']
     Yt = test['St']
 
+    # Grid Search on gamma hyperparameter
     search = GridSearchCV(
         # default 4 folds, 3 train 1 test
         cv=4,
         # customized clissfier
         estimator=LinearClassifier(),
         # 2^-10 to 2^10
-        param_grid={'gamma': list(2**x for x in range(-10, 11, 2))},
+        param_grid={'gamma': list(2 ** x for x in range(-10, 11, 2))},
         # accuracy and mean square error scoring methods
         scoring=('accuracy', 'neg_mean_squared_error'),
         # to use best model returned, we need to set a tiebreaker criteria
         refit='neg_mean_squared_error',
         #  -1 means using all processors
         n_jobs=-1
-                              ).fit(X, Y.argmax(axis=1))
+    ).fit(X, Y.argmax(axis=1))
 
+    # Print results
     print("Best parameters set found on development set:")
     print()
     print(search.best_params_)
