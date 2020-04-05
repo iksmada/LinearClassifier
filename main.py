@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def run_gridsearch_and_plot(X, Y, param_grid: list):
+def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
     # Grid Search on gamma hyperparameter
     search = GridSearchCV(
         # default 4 folds, 3 train 1 test
@@ -28,11 +28,13 @@ def run_gridsearch_and_plot(X, Y, param_grid: list):
 
     # Print results
     fig, ax1 = plt.subplots()
-    plt.title('1st Step Grid search')
+    plt.title(name)
     plt.xscale("log")
     plt.grid()
     gamma_params = list(param['gamma'] for param in search.cv_results_['params'])
 
+    print("########################### %s ###########################" % name)
+    print()
     print("Best parameters set found on development set:")
     print()
     print('Best Acc for %r' % search.cv_results_['params'][search.cv_results_['rank_test_accuracy'][0] - 1])
@@ -91,20 +93,25 @@ if __name__ == '__main__':
     Y_test = Yt.argmax(axis=1)
 
     param_list = list(2 ** x for x in range(-10, 12))
-    best_param = run_gridsearch_and_plot(X, Y_train, param_list)
+    best_param = run_gridsearch_and_plot(X, Y_train, param_list, '1st Step Grid search')
     # check if [1] is bigger
     if np.argmax(best_param) == 0:
         best_param = (best_param[1], best_param[0])
     # get the power
     best_param = np.log2(best_param)
 
+    # add margin for second search for params
+    margin = 0.5
     if best_param[0] == best_param[1]:
-        best_param[0] = best_param[0] - 1
-        best_param[1] = best_param[1] + 1
+        margin = 1
+    best_param[0] = best_param[0] - margin
+    best_param[1] = best_param[1] + margin
 
+    # generate new param list among the best results
     param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
-    best_param = run_gridsearch_and_plot(X, Y_train, param_list)
+    best_param = run_gridsearch_and_plot(X, Y_train, param_list, '2nd Step Grid search')
 
+    # train with ensemble of best gamma for MSE and Acc
     y_pred = LinearClassifier(gamma=np.mean(best_param)).fit(X, Y_train).predict(Xt)
 
     print(classification_report(Y_test, y_pred,
