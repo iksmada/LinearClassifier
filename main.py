@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-import scipy.io
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, accuracy_score, mean_squared_error
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import plot_confusion_matrix
+
 from LinearClassifier import LinearClassifier
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.io
 
 
 def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
@@ -109,10 +111,25 @@ if __name__ == '__main__':
 
     # generate new param list among the best results
     param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
-    best_param = run_gridsearch_and_plot(X, Y_train, param_list, '2nd Step Grid search')
+    best_acc, beat_mse = run_gridsearch_and_plot(X, Y_train, param_list, '2nd Step Grid search')
 
-    # train with ensemble of best gamma for MSE and Acc
-    y_pred = LinearClassifier(gamma=np.mean(best_param)).fit(X, Y_train).predict(Xt)
-
+    # train best gamma Acc
+    clf = LinearClassifier(gamma=best_acc).fit(X, Y_train)
+    y_pred = clf.predict(Xt)
     print(classification_report(Y_test, y_pred,
                                 target_names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']))
+    print('Acc for gamma %f was %f' % (clf.gamma, accuracy_score(Y_test, y_pred)))
+    print('MSE for gamma %f was %f' % (clf.gamma, mean_squared_error(Y_test, y_pred)))
+
+    disp = plot_confusion_matrix(clf, Xt, Y_test,
+                                 display_labels=['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+                                 cmap=plt.cm.Blues,
+                                 normalize='true',
+                                 values_format='.2f')
+
+    disp.ax_.set_title("Matrix de Confusão")
+    plt.show()
+
+    # save weights
+    np.savetxt("weights.txt", clf.weights_)
+
