@@ -116,11 +116,14 @@ if __name__ == '__main__':
     # train best gamma Acc
     clf = LinearClassifier(gamma=best_acc).fit(X, Y_train)
     y_pred = clf.predict(Xt)
+
+    # print results for best classifier
     print(classification_report(Y_test, y_pred,
                                 target_names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']))
     print('Acc for gamma %f was %f' % (clf.gamma, accuracy_score(Y_test, y_pred)))
     print('MSE for gamma %f was %f' % (clf.gamma, mean_squared_error(Y_test, y_pred)))
 
+    # display confusion matrix
     disp = plot_confusion_matrix(clf, Xt, Y_test,
                                  display_labels=['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
                                  cmap=plt.cm.Blues,
