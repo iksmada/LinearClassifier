@@ -6,6 +6,7 @@ from sklearn.metrics import plot_confusion_matrix
 from LinearClassifier import LinearClassifier
 
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import AxesGrid
 import numpy as np
 import scipy.io
 
@@ -129,10 +130,32 @@ if __name__ == '__main__':
                                  cmap=plt.cm.Blues,
                                  normalize='true',
                                  values_format='.2f')
-
     disp.ax_.set_title("Matrix de Confusão")
     plt.show()
 
     # save weights
     np.savetxt("weights.txt", clf.weights_)
 
+    # print heatmap
+    fig = plt.figure()
+    grid = AxesGrid(fig, 111,
+                    ngrids=clf.weights_.shape[1],
+                    nrows_ncols=(3, 4),
+                    axes_pad=0.3,
+                    share_all=True,
+                    label_mode="L",
+                    cbar_location="right",
+                    cbar_mode="single",
+                    )
+
+    for ax, column in zip(grid, range(clf.weights_.shape[1])):
+        ax.set_title('#%s' % str(column + 1)[-1])
+        ax.axis('off')
+        im = ax.imshow(clf.weights_[1:, column].reshape(28, 28).T)
+
+    grid.cbar_axes[0].colorbar(im)
+
+    for cax in grid.cbar_axes:
+        cax.toggle_label(False)
+
+    plt.show()
