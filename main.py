@@ -156,15 +156,33 @@ if __name__ == '__main__':
                     cbar_location="right",
                     cbar_mode="single",
                     )
-
     for ax, column in zip(grid, range(clf.weights_.shape[1])):
         ax.set_title('#%s' % str(column + 1)[-1])
         ax.axis('off')
         im = ax.imshow(clf.weights_[1:, column].reshape(28, 28).T)
-
     grid.cbar_axes[0].colorbar(im)
-
     for cax in grid.cbar_axes:
         cax.toggle_label(False)
+    plt.show()
 
+    # print digts with errors
+    fig = plt.figure()
+    grid = AxesGrid(fig, 111,
+                    nrows_ncols=(3, 4),
+                    axes_pad=0.3,
+                    share_all=True
+                    )
+    offset = 0
+    class_digits = dict()
+    for ax in grid:
+        while Y_test[offset] == y_pred[offset] or class_digits.get(Y_test[offset], 0) > 1:
+            offset = offset + 1
+        class_digits[Y_test[offset]] = class_digits.get(Y_test[offset], 0) + 1
+        ax.set_title('True: %s , Pred: %s' % (str(Y_test[offset]+1)[-1], str(y_pred[offset]+1)[-1]))
+        ax.axis('off')
+        im = ax.imshow(Xt[offset, :].reshape(28, 28).T, cmap='gray')
+        offset = offset + 1
+    grid.cbar_axes[0].colorbar(im)
+    for cax in grid.cbar_axes:
+        cax.toggle_label(False)
     plt.show()
