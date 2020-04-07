@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import argparse
+
 from sklearn.metrics import classification_report, accuracy_score, mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
@@ -81,6 +83,10 @@ def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-g", "--gamma", type=float, help="regularization value for linear classifier")
+    args = vars(parser.parse_args())
+
     # loads MATLAB matrix
     data = scipy.io.loadmat('data.mat')
     test = scipy.io.loadmat('test.mat')
@@ -95,24 +101,27 @@ if __name__ == '__main__':
     Yt = test['St']
     Y_test = Yt.argmax(axis=1)
 
-    param_list = list(2 ** x for x in range(-10, 12))
-    best_param = run_gridsearch_and_plot(X, Y_train, param_list, '1st Step Grid search')
-    # check if [1] is bigger
-    if np.argmax(best_param) == 0:
-        best_param = (best_param[1], best_param[0])
-    # get the power
-    best_param = np.log2(best_param)
+    if args['gamma']:
+        best_acc = args['gamma']
+    else:
+        param_list = list(2 ** x for x in range(-10, 12))
+        best_param = run_gridsearch_and_plot(X, Y_train, param_list, '1st Step Grid search')
+        # check if [1] is bigger
+        if np.argmax(best_param) == 0:
+            best_param = (best_param[1], best_param[0])
+        # get the power
+        best_param = np.log2(best_param)
 
-    # add margin for second search for params
-    margin = 0.5
-    if best_param[0] == best_param[1]:
-        margin = 1
-    best_param[0] = best_param[0] - margin
-    best_param[1] = best_param[1] + margin
+        # add margin for second search for params
+        margin = 0.5
+        if best_param[0] == best_param[1]:
+            margin = 1
+        best_param[0] = best_param[0] - margin
+        best_param[1] = best_param[1] + margin
 
-    # generate new param list among the best results
-    param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
-    best_acc, beat_mse = run_gridsearch_and_plot(X, Y_train, param_list, '2nd Step Grid search')
+        # generate new param list among the best results
+        param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
+        best_acc, best_mse = run_gridsearch_and_plot(X, Y_train, param_list, '2nd Step Grid search')
 
     # train best gamma Acc
     clf = LinearClassifier(gamma=best_acc).fit(X, Y_train)
