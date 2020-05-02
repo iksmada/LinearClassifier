@@ -112,7 +112,7 @@ if __name__ == '__main__':
     if args['classifier'] == classifiers[0]:
         clf = LinearClassifier()
     else:
-        clf = ExtremeLearningMachine()
+        clf = ExtremeLearningMachine(seed=0)
         pass
 
     if args['gamma']:
