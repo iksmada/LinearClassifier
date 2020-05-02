@@ -13,15 +13,15 @@ import numpy as np
 import scipy.io
 
 
-def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
+def run_gridsearch_and_plot(X, Y, estimator, param_grid: dict, main_param: str, name: str):
     # Grid Search on gamma hyperparameter
     search = GridSearchCV(
         # default 4 folds, 3 train 1 test
         cv=4,
         # customized clissfier
-        estimator=LinearClassifier(),
+        estimator=estimator,
         # 2^-10 to 2^10
-        param_grid={'gamma': param_grid},
+        param_grid=param_grid,
         # accuracy and mean square error scoring methods
         scoring=('accuracy', 'neg_mean_squared_error'),
         # to use best model returned, we need to set a tiebreaker criteria
@@ -36,7 +36,7 @@ def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
     plt.title(name)
     plt.xscale("log")
     plt.grid()
-    gamma_params = list(param['gamma'] for param in search.cv_results_['params'])
+    plot_params = list(param[main_param] for param in search.cv_results_['params'])
 
     best_acc_params = search.cv_results_['params'][np.argmax(search.cv_results_['mean_test_accuracy'])]
     best_mse_params = search.cv_results_['params'][np.argmax(search.cv_results_['mean_test_neg_mean_squared_error'])]
@@ -59,7 +59,7 @@ def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
     color = 'tab:red'
     ax1.set_xlabel('Coeficiente de Regularização')
     ax1.set_ylabel('Acurácia', color=color)
-    ax1.plot(gamma_params, means_acc, color=color)
+    ax1.plot(plot_params, means_acc, color=color)
     ax1.tick_params(axis='y', labelcolor=color)
 
     print()
@@ -76,7 +76,7 @@ def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     color = 'tab:blue'
     ax2.set_ylabel('Erro quadrático médio', color=color)  # we already handled the x-label with ax1
-    ax2.plot(gamma_params, means_mse, color=color)
+    ax2.plot(plot_params, means_mse, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.show()
@@ -85,8 +85,10 @@ def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
 
 
 if __name__ == '__main__':
+    classifiers = ['LinearClassifier', 'ExtremeLearningMachine']
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--gamma", type=float, help="regularization value for linear classifier")
+    parser.add_argument("-c", "--classifier", type=str, help="Name of classifier", choices=classifiers, required=True)
     args = vars(parser.parse_args())
 
     # loads MATLAB matrix
@@ -103,11 +105,18 @@ if __name__ == '__main__':
     Yt = test['St']
     Y_test = Yt.argmax(axis=1)
 
+    if args['classifier'] == classifiers[0]:
+        clf = LinearClassifier()
+    else:
+        # clf = ExtremeLearningMachine()
+        pass
+
     if args['gamma']:
         best_acc = args['gamma']
     else:
         param_list = list(2 ** x for x in range(-10, 12))
-        best_param = run_gridsearch_and_plot(X, Y_train, param_list, '1st Step Grid search')
+        best_param = run_gridsearch_and_plot(X, Y_train, clf, {'gamma': param_list},
+                                             'gamma', '1st Step Grid search')
         # check if [1] is bigger
         if np.argmax(best_param) == 0:
             best_param = (best_param[1], best_param[0])
@@ -118,10 +127,12 @@ if __name__ == '__main__':
 
         # generate new param list among the best results
         param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
-        best_acc, best_mse = run_gridsearch_and_plot(X, Y_train, param_list, '2nd Step Grid search')
+        best_acc, best_mse = run_gridsearch_and_plot(X, Y_train, clf, {'gamma': param_list},
+                                                     'gamma', '2nd Step Grid search')
 
     # train best gamma Acc
-    clf = LinearClassifier(gamma=best_acc).fit(X, Y_train)
+    clf.set_params(gamma=best_acc)
+    clf.fit(X, Y_train)
     y_pred = clf.predict(Xt)
 
     # print results for best classifier
@@ -175,7 +186,7 @@ if __name__ == '__main__':
         while Y_test[offset] == y_pred[offset] or class_digits.get(Y_test[offset], 0) > 1:
             offset = offset + 1
         class_digits[Y_test[offset]] = class_digits.get(Y_test[offset], 0) + 1
-        ax.set_title('True: %s , Pred: %s' % (str(Y_test[offset]+1)[-1], str(y_pred[offset]+1)[-1]))
+        ax.set_title('True: %s , Pred: %s' % (str(Y_test[offset] + 1)[-1], str(y_pred[offset] + 1)[-1]))
         ax.axis('off')
         im = ax.imshow(Xt[offset, :].reshape(28, 28).T, cmap='gray')
         offset = offset + 1
