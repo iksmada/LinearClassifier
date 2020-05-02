@@ -38,12 +38,14 @@ def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
     plt.grid()
     gamma_params = list(param['gamma'] for param in search.cv_results_['params'])
 
+    best_acc_params = search.cv_results_['params'][np.argmax(search.cv_results_['mean_test_accuracy'])]
+    best_mse_params = search.cv_results_['params'][np.argmax(search.cv_results_['mean_test_neg_mean_squared_error'])]
     print("########################### %s ###########################" % name)
     print()
     print("Best parameters set found on development set:")
     print()
-    print('Best Acc for %r' % search.cv_results_['params'][search.cv_results_['rank_test_accuracy'][0] - 1])
-    print('Best MSE for %r' % search.cv_results_['params'][search.cv_results_['rank_test_neg_mean_squared_error'][0] - 1])
+    print('Best Acc for %r' % best_acc_params)
+    print('Best MSE for %r' % best_mse_params)
     print()
     print("Grid Accuracy on development set:")
     print()
@@ -79,7 +81,7 @@ def run_gridsearch_and_plot(X, Y, param_grid: list, name: str):
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.show()
 
-    return search.cv_results_['params'][search.cv_results_['rank_test_accuracy'][0]-1]['gamma'], search.cv_results_['params'][search.cv_results_['rank_test_neg_mean_squared_error'][0]-1]['gamma']
+    return best_acc_params['gamma'], best_mse_params['gamma']
 
 
 if __name__ == '__main__':
@@ -111,13 +113,8 @@ if __name__ == '__main__':
             best_param = (best_param[1], best_param[0])
         # get the power
         best_param = np.log2(best_param)
-
-        # add margin for second search for params
-        margin = 0.5
-        if best_param[0] == best_param[1]:
-            margin = 1
-        best_param[0] = best_param[0] - margin
-        best_param[1] = best_param[1] + margin
+        best_param[0] = best_param[0] - 1
+        best_param[1] = best_param[1] + 1
 
         # generate new param list among the best results
         param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
