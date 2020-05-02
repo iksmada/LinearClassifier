@@ -151,11 +151,11 @@ if __name__ == '__main__':
     disp.ax_.set_title("Matrix de Confusão")
     plt.show()
 
-    # save weights
-    np.savetxt("weights.txt", clf.weights_)
-
-    # print heatmap
     if isinstance(clf, LinearClassifier):
+        # save weights
+        np.savetxt("weights.txt", clf.weights_)
+
+        # print heatmap
         fig = plt.figure()
         grid = AxesGrid(fig, 111,
                         ngrids=clf.weights_.shape[1],
