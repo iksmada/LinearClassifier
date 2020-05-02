@@ -29,8 +29,7 @@ class ExtremeLearningMachine(BaseEstimator, ClassifierMixin):
         X = np.hstack((np.ones((X.shape[0], 1)), X))
         # generate random matrix if it does not exist or it is a different size
         rng = np.random.default_rng(seed=self.seed)
-        if not self.V_ or self.V_.shape[0] != X.shape[1]:
-            self.V_ = rng.normal(scale=0.2, size=(X.shape[1], self.neurons))
+        self.V_ = rng.normal(scale=0.2, size=(X.shape[1], self.neurons))
         # calculate activator for mid-layer
         H = np.tanh(X.dot(self.V_))
         # add bias to H
@@ -51,7 +50,7 @@ class ExtremeLearningMachine(BaseEstimator, ClassifierMixin):
         # Check is fit had been called
         check_is_fitted(self)
         # Input validation
-        X = check_array(X, ensure_min_features=self.weights_.shape[0] - 1)
+        X = check_array(X, ensure_min_features=self.V_.shape[0] - 1)
         # add bias to X and remove colums in order to match lines in W
         X = np.hstack((np.ones((X.shape[0], 1)), X[:, :self.V_.shape[0] - 1]))
         # calculate activation funcion:

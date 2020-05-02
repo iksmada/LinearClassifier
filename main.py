@@ -92,6 +92,7 @@ if __name__ == '__main__':
     classifiers = ['LinearClassifier', 'ExtremeLearningMachine']
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--gamma", type=float, help="regularization value for linear classifier")
+    parser.add_argument("-s", "--seed", type=int, help="Seed for random matrix generation", default=0)
     parser.add_argument("-c", "--classifier", type=str, help="Name of classifier", choices=classifiers, required=True)
     args = vars(parser.parse_args())
 
@@ -112,7 +113,8 @@ if __name__ == '__main__':
     if args['classifier'] == classifiers[0]:
         clf = LinearClassifier()
     else:
-        clf = ExtremeLearningMachine(seed=0)
+        # seed should be not None to create always the same random matrix in CV
+        clf = ExtremeLearningMachine(seed=args['seed'])
         pass
 
     if args['gamma']:
@@ -137,7 +139,7 @@ if __name__ == '__main__':
     clf.set_params(gamma=best_acc)
 
     # find best seed for ELM
-    if isinstance(clf, ExtremeLearningMachine):
+    if isinstance(clf, ExtremeLearningMachine) and not args['seed']:
         # generate list of seeds for random values, order is not important
         param_list = list(range(10))
         best_acc, best_mse = run_gridsearch_and_plot(X, Y_train, clf, {'seed': param_list},
@@ -208,3 +210,14 @@ if __name__ == '__main__':
     for cax in grid.cbar_axes:
         cax.toggle_label(False)
     plt.show()
+
+    if isinstance(clf, ExtremeLearningMachine):
+        clf.set_params(neurons=1000)
+        clf.fit(X, Y_train)
+        y_pred = clf.predict(Xt)
+
+        # print results for best classifier
+        print(classification_report(Y_test, y_pred,
+                                    target_names=['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']))
+        print('Acc for gamma %f was %f' % (clf.gamma, accuracy_score(Y_test, y_pred)))
+        print('MSE for gamma %f was %f' % (clf.gamma, mean_squared_error(Y_test, y_pred)))
