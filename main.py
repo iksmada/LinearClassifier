@@ -15,7 +15,7 @@ import scipy.io
 
 
 def run_gridsearch_and_plot(X, Y, estimator, param_grid: dict, main_param: str, name: str):
-    # Grid Search on gamma hyperparameter
+    # Grid Search on param_grid of hyperparameters
     search = GridSearchCV(
         # default 4 folds, 3 train 1 test
         cv=4,
@@ -39,8 +39,11 @@ def run_gridsearch_and_plot(X, Y, estimator, param_grid: dict, main_param: str, 
     plt.grid()
     plot_params = list(param[main_param] for param in search.cv_results_['params'])
 
-    best_acc_params = search.cv_results_['params'][np.argmax(search.cv_results_['mean_test_accuracy'])]
-    best_mse_params = search.cv_results_['params'][np.argmax(search.cv_results_['mean_test_neg_mean_squared_error'])]
+    # in case of multiple occurrences of with the maximum value, get latest
+    best_acc_params = search.cv_results_['params'][::-1][np.argmax(
+        search.cv_results_['mean_test_accuracy'][::-1])]
+    best_mse_params = search.cv_results_['params'][::-1][np.argmax(
+        search.cv_results_['mean_test_neg_mean_squared_error'][::-1])]
     print("########################### %s ###########################" % name)
     print()
     print("Best parameters set found on development set:")
@@ -82,7 +85,7 @@ def run_gridsearch_and_plot(X, Y, estimator, param_grid: dict, main_param: str, 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.show()
 
-    return best_acc_params['gamma'], best_mse_params['gamma']
+    return best_acc_params[main_param], best_mse_params[main_param]
 
 
 if __name__ == '__main__':
