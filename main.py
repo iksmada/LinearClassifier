@@ -133,9 +133,18 @@ if __name__ == '__main__':
         param_list = list(2 ** x for x in np.linspace(best_param[0], best_param[1], 11))
         best_acc, best_mse = run_gridsearch_and_plot(X, Y_train, clf, {'gamma': param_list},
                                                      'gamma', '2nd Step Grid search')
+    # set best gamma
+    clf.set_params(gamma=best_acc)
+
+    # find best seed for ELM
+    if isinstance(clf, ExtremeLearningMachine):
+        # generate new param list among the best results
+        param_list = list(range(10))
+        best_acc, best_mse = run_gridsearch_and_plot(X, Y_train, clf, {'seed': param_list},
+                                                     'seed', 'Search best seed')
+        clf.set_params(seed=best_acc)
 
     # train best gamma Acc
-    clf.set_params(gamma=best_acc)
     clf.fit(X, Y_train)
     y_pred = clf.predict(Xt)
 
