@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
     # find best seed for ELM
     if isinstance(clf, ExtremeLearningMachine):
-        # generate new param list among the best results
+        # generate list of seeds for random values, order is not important
         param_list = list(range(10))
         best_acc, best_mse = run_gridsearch_and_plot(X, Y_train, clf, {'seed': param_list},
                                                      'seed', 'Search best seed')

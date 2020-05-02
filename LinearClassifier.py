@@ -16,7 +16,7 @@ class LinearClassifier(BaseEstimator, ClassifierMixin):
         if len(y.shape) == 1:
             y = y.reshape(-1, 1)
         # get classes
-        self.classes = list(range(0, y.max()+1))
+        self.classes_ = list(range(0, y.max()+1))
         # Check that X and y have correct shape
         X, y = check_X_y(X, y, y_numeric=True, multi_output=True)
         # create one hot encoded matrix
