@@ -30,7 +30,6 @@ class ExtremeLearningMachine(BaseEstimator, ClassifierMixin):
         # generate random matrix if it does not exist or it is a different size
         rng = np.random.default_rng(seed=self.seed)
         if not self.V_ or self.V_.shape[0] != X.shape[1]:
-            print("Generated new V")
             self.V_ = rng.normal(scale=0.2, size=(X.shape[1], self.neurons))
         # calculate activator for mid-layer
         H = np.tanh(X.dot(self.V_))
