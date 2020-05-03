@@ -115,7 +115,6 @@ if __name__ == '__main__':
     else:
         # seed should be not None to create always the same random matrix in CV
         clf = ExtremeLearningMachine(seed=args['seed'])
-        pass
 
     if args['gamma']:
         best_acc = args['gamma']

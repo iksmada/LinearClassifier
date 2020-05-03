@@ -48,7 +48,7 @@ class ExtremeLearningMachine(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         # Check is fit had been called
-        check_is_fitted(self)
+        check_is_fitted(self, ["weights_", "V_"])
         # Input validation
         X = check_array(X, ensure_min_features=self.V_.shape[0] - 1)
         # add bias to X and remove colums in order to match lines in W
