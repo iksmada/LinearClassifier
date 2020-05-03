@@ -31,9 +31,9 @@ class ExtremeLearningMachine(BaseEstimator, ClassifierMixin):
         rng = np.random.default_rng(seed=self.seed)
         self.V_ = rng.normal(scale=0.2, size=(X.shape[1], self.neurons))
         # calculate activator for mid-layer
-        H = np.tanh(X.dot(self.V_))
+        #H = np.tanh(X.dot(self.V_))
         # add bias to H
-        H = np.hstack((np.ones((H.shape[0], 1)), H))
+        H = np.append(np.ones((X.shape[0], 1)), np.tanh(X.dot(self.V_)), axis=1)
         # if n <= N
         if self.neurons <= X.shape[0]:
             #  w = (h_t*h + gamma*I)^-1 * h_t*y
@@ -48,16 +48,17 @@ class ExtremeLearningMachine(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         # Check is fit had been called
-        check_is_fitted(self, ["weights_", "V_"])
+        check_is_fitted(self)
         # Input validation
         X = check_array(X, ensure_min_features=self.V_.shape[0] - 1)
         # add bias to X and remove colums in order to match lines in W
-        X = np.hstack((np.ones((X.shape[0], 1)), X[:, :self.V_.shape[0] - 1]))
+        X = np.append(np.ones((X.shape[0], 1)), X[:, :self.V_.shape[0] - 1], axis=1)
         # calculate activation funcion:
-        H = np.tanh(X.dot(self.V_))
+        # H = np.tanh(X.dot(self.V_))
         # add bias to H
-        H = np.hstack((np.ones((H.shape[0], 1)), H))
+        # H = np.append(np.ones((X.shape[0], 1)), H, axis=1)
         # h * w
-        y = H.dot(self.weights_)
+        # y = H.dot(self.weights_)
+        y = np.append(np.ones((X.shape[0], 1)), np.tanh(X.dot(self.V_)), axis=1).dot(self.weights_)
         #  need to convert hot encoded to labels
         return y.argmax(axis=1)

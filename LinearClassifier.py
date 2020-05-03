@@ -31,7 +31,7 @@ class LinearClassifier(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         # Check is fit had been called
-        check_is_fitted(self, ["weights_"])
+        check_is_fitted(self)
         # Input validation
         X = check_array(X, ensure_min_features=self.weights_.shape[0]-1)
         # add bias to X and remove colums in order to match lines in W
