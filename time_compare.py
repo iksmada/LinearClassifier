@@ -1,11 +1,22 @@
 import argparse
-import timeit
+import time
 
 import numpy as np
 import scipy.io
+from sklearn.base import BaseEstimator
 
 from ExtremeLearningMachine import ExtremeLearningMachine
 from LinearClassifier import LinearClassifier
+
+
+def loop_snippet(clf: BaseEstimator, repeat: int, x, y, xt):
+    time_table = []
+    for i in range(repeat):
+        start = time.perf_counter()
+        clf.fit(x, y)
+        clf.predict(xt)
+        time_table.append(time.perf_counter() - start)
+    return time_table
 
 if __name__ == '__main__':
     classifiers = ['LinearClassifier', 'ExtremeLearningMachine']
@@ -28,14 +39,12 @@ if __name__ == '__main__':
     Yt = test['St']
     Y_test = Yt.argmax(axis=1)
 
-    stmt = timeit.Timer('clf.fit(X, Y_train); clf.predict(Xt)', globals=globals())
-
-    clf = ExtremeLearningMachine(seed=args['seed'], gamma=args['gamma'])
-    time_table = stmt.repeat(repeat=10, number=1)
+    clf = LinearClassifier(gamma=args['gamma'])
+    time_table = loop_snippet(clf, 10, X, Y_train, Xt)
     print("%0.3f s (+/-%0.03f) for LinearClassifier"
           % (np.mean(time_table), np.std(time_table) * 2))
 
-    clf = LinearClassifier(gamma=args['gamma'])
-    time_table = stmt.repeat(repeat=10, number=1)
+    clf = ExtremeLearningMachine(seed=args['seed'], gamma=args['gamma'])
+    time_table = loop_snippet(clf, 10, X, Y_train, Xt)
     print("%0.3f s (+/-%0.03f) for ExtremeLearningMachine"
           % (np.mean(time_table), np.std(time_table) * 2))
